@@ -1,0 +1,46 @@
+# Archivos y carpetas del sistema
+.DS_Store
+Thumbs.db
+
+# Configuración de IDEs
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# Composer
+/vendor/
+/composer.lock
+
+# Logs
+*.log
+
+# Cachés
+/cache/
+/tmp/
+/storage/
+*.cache
+
+# Archivos de entorno
+.env
+.env.*
+
+# Laragon
+/bin/
+/etc/
+/data/
+/log/
+/usr/
+
+# Archivos de sesión
+*.sess
+
+# Otros
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Archivos de pruebas
+phpunit.xml
+phpunit.result.cache
