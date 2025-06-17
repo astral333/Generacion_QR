@@ -26,8 +26,7 @@ array_shift($data); // Quitar encabezado
 foreach ($data as $row) {
     // Asumimos que el nombre está en la columna 1 (índice 1)
     $nombre = trim($row[1]);
-    $nombreFormateado = str_replace(' ', '_', $nombre);
-
+$nombreFormateado = preg_replace('/[^A-Za-z0-9_\-]/', '_', $nombre);
     // Generar QR
     $pdfUrl = $baseUrl . rawurlencode($nombreFormateado) . ".pdf";
     $qrPath = $qrDir . $nombreFormateado . '.png';

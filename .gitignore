@@ -44,3 +44,7 @@ yarn-error.log*
 # Archivos de pruebas
 phpunit.xml
 phpunit.result.cache
+
+# Ignorar certificados generados
+/certificados/
+/qrs/
