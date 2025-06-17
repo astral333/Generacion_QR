@@ -1,0 +1,15 @@
+
+$word = New-Object -ComObject Word.Application
+$word.Visible = $false
+
+Get-ChildItem -Path "C:\laragon\www\Generacion_QR\certificados" -Filter *.docx | ForEach-Object {
+    $docPath = $_.FullName
+    $pdfName = [System.IO.Path]::GetFileNameWithoutExtension($_.Name) + ".pdf"
+    $pdfPath = Join-Path -Path "C:\laragon\www\Generacion_QR\certificados" -ChildPath $pdfName
+
+    $doc = $word.Documents.Open($docPath, [ref]$false, [ref]$true)  # solo lectura
+    $doc.SaveAs([ref]$pdfPath.ToString(), [ref]17)
+    $doc.Close()
+}
+
+$word.Quit()
