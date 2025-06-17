@@ -2,41 +2,60 @@
 require 'vendor/autoload.php';
 
 use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpWord\TemplateProcessor;
 use Endroid\QrCode\QrCode;
 use Endroid\QrCode\Writer\PngWriter;
 
-// Leer el Excel
-$spreadsheet = IOFactory::load("registro.xlsx");
+// Rutas
+$archivoExcel = "registro.xlsx";
+$plantillaWord = "plantilla.docx";
+$qrDir = __DIR__ . "/qrs/";
+$outDir = __DIR__ . "/certificados/";
+$baseUrl = "https://miuniversidad.edu.pe/pdfs/";
+
+// Crear carpetas si no existen
+if (!is_dir($qrDir)) mkdir($qrDir, 0777, true);
+if (!is_dir($outDir)) mkdir($outDir, 0777, true);
+
+// Leer Excel
+$spreadsheet = IOFactory::load($archivoExcel);
 $sheet = $spreadsheet->getActiveSheet();
 $data = $sheet->toArray();
-
-// Suponemos que la primera fila es la cabecera
-array_shift($data); // Quita la cabecera
-
-// Ruta base de los PDF en web
-$baseUrl = "https://tu-dominio.com/pdfs/";
-
-// Carpeta donde se guardarán los QR generados
-$outputDir = __DIR__ . '/qrs/';
-if (!is_dir($outputDir)) {
-    mkdir($outputDir, 0777, true);
-}
+array_shift($data); // Quitar encabezado
 
 foreach ($data as $row) {
-    $nombreCompleto = trim($row[1]); // Ajusta el índice si el nombre está en otra columna
+    // Asumimos que el nombre está en la columna 1 (índice 1)
+    $nombre = trim($row[1]);
+    $nombreFormateado = str_replace(' ', '_', $nombre);
 
-    // Construir la URL al PDF
-    $pdfFileName = $nombreCompleto . ".pdf";
-    $pdfUrl = $baseUrl . rawurlencode($pdfFileName); // Encode para nombres con espacios
+    // Generar QR
+    $pdfUrl = $baseUrl . rawurlencode($nombreFormateado) . ".pdf";
+    $qrPath = $qrDir . $nombreFormateado . '.png';
 
-    // Crear el QR
-    $qr = new QrCode($pdfUrl);
-    $writer = new PngWriter();
-    $result = $writer->write($qr);
+    if (!file_exists($qrPath)) {
+        $qr = new QrCode($pdfUrl);
+        $writer = new PngWriter();
+        $result = $writer->write($qr);
+        $result->saveToFile($qrPath);
+    } else {
+        echo "No se generó el QR: $qrPath\n";
+    }
 
-    // Guardar QR como imagen
-    $qrPath = $outputDir . str_replace(' ', '_', $nombreCompleto) . '.png';
-    $result->saveToFile($qrPath);
+    // Generar certificado Word
+    $template = new TemplateProcessor($plantillaWord);
+    $template->setValue('NOMBRE', $nombre);
+    $template->setImageValue('QR', [
+        'path' => $qrPath,
+        'width' => 120,
+        'height' => 120,
+        'ratio' => true
+    ]);
 
-    echo "QR generado para $nombreCompleto: $pdfUrl\n";
+    $docxFile = $outDir . $nombreFormateado . '.docx';
+    $template->saveAs($docxFile);
+    echo "Generado: $docxFile\n";
+
+    // (Opcional) Convertir a PDF con LibreOffice
+    $command = 'soffice --headless --convert-to pdf --outdir "' . $outDir . '" "' . $docxFile . '"';
+    exec($command);
 }
